@@ -2,19 +2,21 @@ from flask import Flask, render_template, request, jsonify
 import os
 from werkzeug.utils import secure_filename
 from pdf_analyzer import analyze_pdf
+from screenshot_detector import detect_screenshot
 import logging
+import tempfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['SECRET_KEY'] = os.urandom(24)  # Required for secure file uploads
 
-# Ensure upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Use temporary directory for file uploads
+UPLOAD_FOLDER = tempfile.gettempdir()
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ALLOWED_EXTENSIONS = {'pdf'}
 
@@ -49,21 +51,30 @@ def analyze():
             return jsonify({'error': 'No file selected'}), 400
         
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            
+            # Create a temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf', dir=UPLOAD_FOLDER)
             try:
-                file.save(filepath)
-                result = analyze_pdf(filepath)
-                # Clean up the uploaded file
-                if os.path.exists(filepath):
-                    os.remove(filepath)
+                # Save the uploaded file to the temporary file
+                file.save(temp_file.name)
+                
+                # Analyze the PDF
+                result = analyze_pdf(temp_file.name)
+                
+                # Add screenshot detection
+                screenshot_result = detect_screenshot(temp_file.name)
+                if "error" not in screenshot_result:
+                    result["screenshot_analysis"] = screenshot_result
+                
                 return jsonify(result)
             except Exception as e:
                 logger.error(f"Error processing file: {str(e)}")
-                if os.path.exists(filepath):
-                    os.remove(filepath)
                 return jsonify({'error': 'Error processing PDF file'}), 500
+            finally:
+                # Clean up the temporary file
+                try:
+                    os.unlink(temp_file.name)
+                except Exception as e:
+                    logger.error(f"Error cleaning up temporary file: {str(e)}")
         
         return jsonify({'error': 'Invalid file type. Only PDF files are allowed'}), 400
     

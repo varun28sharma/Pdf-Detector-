@@ -14,6 +14,24 @@
             border-color: #4299e1;
             background-color: #ebf8ff;
         }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -145,6 +163,7 @@
             const isOriginal = data.is_original;
             const issues = data.issues_found || [];
             const permissions = data.permissions || {};
+            const screenshotAnalysis = data.screenshot_analysis || {};
 
             let html = `
                 <div class="text-center mb-4">
@@ -153,6 +172,30 @@
                     </div>
                 </div>
             `;
+
+            if (screenshotAnalysis.probability !== undefined) {
+                const probability = screenshotAnalysis.probability;
+                const color = probability > 50 ? 'text-red-500' : 'text-green-500';
+                
+                html += `
+                    <div class="fade-in text-center mb-6">
+                        <h3 class="text-lg font-semibold mb-2">Screenshot Analysis</h3>
+                        <div class="relative inline-block">
+                            <svg class="progress-ring w-32 h-32" viewBox="0 0 100 100">
+                                <circle class="progress-ring__circle stroke-gray-200" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle ${color}" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"
+                                    style="stroke-dasharray: 264; stroke-dashoffset: ${264 - (264 * probability / 100)}"/>
+                            </svg>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <span class="text-xl font-bold ${color}">${probability}%</span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-gray-600">
+                            ${probability > 50 ? 'Likely a screenshot' : 'Likely not a screenshot'}
+                        </p>
+                    </div>
+                `;
+            }
 
             if (!isOriginal) {
                 html += '<div class="space-y-4">';
