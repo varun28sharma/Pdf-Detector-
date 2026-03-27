@@ -4,74 +4,315 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Authenticity Detector</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+        :root {
+            --ink: #1d2a3a;
+            --muted: #5f6d7a;
+            --paper: #fffdf8;
+            --panel: rgba(255, 255, 255, 0.78);
+            --line: #c8d4de;
+            --accent: #0f766e;
+            --accent-strong: #0b5f59;
+            --danger: #b42318;
+            --ok: #0f7a4b;
+            --glow: 0 20px 45px rgba(24, 69, 92, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 20%, rgba(15, 118, 110, 0.17), transparent 38%),
+                radial-gradient(circle at 86% 14%, rgba(255, 136, 77, 0.2), transparent 30%),
+                linear-gradient(130deg, #f8f5eb 0%, #f0fbff 52%, #fff8ee 100%);
+            padding: 40px 18px;
+        }
+
+        .shell {
+            width: min(940px, 100%);
+            margin: 0 auto;
+            animation: riseIn 0.6s ease;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            margin: 12px auto 0;
+            max-width: 680px;
+            color: var(--muted);
+            font-size: clamp(0.95rem, 2vw, 1.08rem);
+        }
+
+        .panel {
+            backdrop-filter: blur(14px);
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 22px;
+            box-shadow: var(--glow);
+            padding: 24px;
+        }
+
         .drop-zone {
-            border: 2px dashed #cbd5e0;
-            transition: all 0.3s ease;
+            border: 2px dashed var(--line);
+            border-radius: 16px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.82);
+            transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
         }
-        .drop-zone:hover, .drop-zone.dragover {
-            border-color: #4299e1;
-            background-color: #ebf8ff;
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            background: #f1fffc;
         }
-        
+
+        .upload-icon {
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 12px;
+            color: var(--accent);
+        }
+
+        .drop-title {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 600;
+        }
+
+        .drop-subtitle {
+            margin: 8px 0 16px;
+            color: var(--muted);
+            font-size: 0.93rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #fff;
+            padding: 11px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .file-name {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        .divider {
+            margin: 22px 0;
+            border: 0;
+            border-top: 1px solid #dde7ef;
+        }
+
         .progress-ring {
             transform: rotate(-90deg);
         }
-        
+
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s;
             transform-origin: 50% 50%;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
         }
-        
+
+        .result-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .badge-ok {
+            background: var(--ok);
+        }
+
+        .badge-bad {
+            background: var(--danger);
+        }
+
+        .block {
+            background: #ffffff;
+            border: 1px solid #e7eef4;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .block h3 {
+            margin: 0 0 8px;
+            font-size: 0.98rem;
+        }
+
+        .list {
+            margin: 0;
+            padding-left: 18px;
+            color: #34485c;
+        }
+
+        .list li {
+            margin-bottom: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border-radius: 999px;
+            margin: 0 auto;
+            border: 4px solid #d4efe9;
+            border-top-color: var(--accent);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading p {
+            color: var(--muted);
+            margin: 10px 0 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 26px 12px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .drop-zone {
+                padding: 24px 12px;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto">
-            <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">PDF Authenticity Detector</h1>
-            
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div id="drop-zone" class="drop-zone rounded-lg p-8 text-center cursor-pointer mb-6">
-                    <div class="mb-4">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </div>
-                    <p class="text-gray-600 mb-2">Drag and drop your PDF file here</p>
-                    <p class="text-gray-500 text-sm">or</p>
-                    <label class="mt-2 inline-block">
-                        <span class="bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-600 transition-colors">
-                            Browse Files
-                        </span>
-                        <input type="file" id="file-input" class="hidden" accept=".pdf">
-                    </label>
-                </div>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <h1>PDF Authenticity Detector</h1>
+            <p>Upload a document to inspect potential tampering signals, metadata inconsistencies, and screenshot-style content patterns.</p>
+        </section>
 
-                <div id="result" class="hidden">
-                    <div class="border-t pt-6">
-                        <h2 class="text-xl font-semibold mb-4">Analysis Result</h2>
-                        <div id="result-content" class="space-y-4">
-                            <!-- Results will be inserted here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div id="loading" class="hidden text-center py-4">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p class="mt-2 text-gray-600">Analyzing PDF...</p>
-                </div>
+        <section class="panel">
+            <div id="drop-zone" class="drop-zone">
+                <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="drop-title">Drop your PDF here</p>
+                <p class="drop-subtitle">or choose a file manually</p>
+                <label>
+                    <span class="btn">Browse Files</span>
+                    <input type="file" id="file-input" class="hidden" accept=".pdf">
+                </label>
+                <div id="file-name" class="file-name"></div>
             </div>
-        </div>
-    </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Running authenticity checks...</p>
+            </div>
+
+            <div id="result" class="hidden">
+                <hr class="divider">
+                <div class="result-header">
+                    <h2 class="result-title">Analysis Result</h2>
+                    <div id="verdict-badge" class="badge"></div>
+                </div>
+                <div id="result-content"></div>
+            </div>
+        </section>
+    </main>
 
     <script>
         const dropZone = document.getElementById('drop-zone');
@@ -79,6 +320,8 @@
         const result = document.getElementById('result');
         const resultContent = document.getElementById('result-content');
         const loading = document.getElementById('loading');
+        const fileName = document.getElementById('file-name');
+        const verdictBadge = document.getElementById('verdict-badge');
 
         // Drag and drop handlers
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -124,6 +367,7 @@
             if (files.length > 0) {
                 const file = files[0];
                 if (file.type === 'application/pdf') {
+                    fileName.textContent = `Selected: ${file.name}`;
                     uploadFile(file);
                 } else {
                     alert('Please upload a PDF file');
@@ -156,7 +400,9 @@
 
         function displayResults(data) {
             if (data.error) {
-                resultContent.innerHTML = `<div class="text-red-500">${data.error}</div>`;
+                verdictBadge.textContent = 'ERROR';
+                verdictBadge.className = 'badge badge-bad';
+                resultContent.innerHTML = `<div class="block"><p style="margin: 0; color: var(--danger); font-weight: 600;">${data.error}</p></div>`;
                 return;
             }
 
@@ -165,66 +411,66 @@
             const permissions = data.permissions || {};
             const screenshotAnalysis = data.screenshot_analysis || {};
 
+            verdictBadge.textContent = isOriginal ? 'ORIGINAL' : 'FAKE';
+            verdictBadge.className = `badge ${isOriginal ? 'badge-ok' : 'badge-bad'}`;
+
             let html = `
-                <div class="text-center mb-4">
-                    <div class="text-2xl font-bold ${isOriginal ? 'text-green-500' : 'text-red-500'}">
-                        ${isOriginal ? 'ORIGINAL' : 'FAKE'}
-                    </div>
+                <div class="block fade-in">
+                    <h3>Document Verdict</h3>
+                    <p style="margin: 0; color: #34485c;">
+                        ${isOriginal
+                            ? 'No integrity issues were flagged in this report.'
+                            : 'Potential manipulation markers were detected and need review.'}
+                    </p>
                 </div>
             `;
 
             if (screenshotAnalysis.probability !== undefined) {
                 const probability = screenshotAnalysis.probability;
-                const color = probability > 50 ? 'text-red-500' : 'text-green-500';
+                const color = probability > 50 ? 'var(--danger)' : 'var(--ok)';
                 
                 html += `
-                    <div class="fade-in text-center mb-6">
-                        <h3 class="text-lg font-semibold mb-2">Screenshot Analysis</h3>
-                        <div class="relative inline-block">
+                    <div class="block fade-in" style="text-align: center;">
+                        <h3>Screenshot Analysis</h3>
+                        <div style="position: relative; display: inline-block; margin-top: 4px;">
                             <svg class="progress-ring w-32 h-32" viewBox="0 0 100 100">
-                                <circle class="progress-ring__circle stroke-gray-200" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"/>
-                                <circle class="progress-ring__circle ${color}" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"
+                                <circle class="progress-ring__circle" stroke="#d9e4ed" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle" stroke="${color}" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"
                                     style="stroke-dasharray: 264; stroke-dashoffset: ${264 - (264 * probability / 100)}"/>
                             </svg>
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                <span class="text-xl font-bold ${color}">${probability}%</span>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <span style="font-size: 1.3rem; font-weight: 700; color: ${color};">${probability}%</span>
                             </div>
                         </div>
-                        <p class="mt-2 text-gray-600">
+                        <p style="margin: 8px 0 0; color: #4f5f6f;">
                             ${probability > 50 ? 'Likely a screenshot' : 'Likely not a screenshot'}
                         </p>
                     </div>
                 `;
             }
 
-            if (!isOriginal) {
-                html += '<div class="space-y-4">';
-                
-                if (issues.length > 0) {
-                    html += `
-                        <div>
-                            <h3 class="font-semibold text-gray-700">Issues Found:</h3>
-                            <ul class="list-disc list-inside text-gray-600">
-                                ${issues.map(issue => `<li>${issue}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                }
+            if (issues.length > 0) {
+                html += `
+                    <div class="block fade-in">
+                        <h3>Issues Found</h3>
+                        <ul class="list">
+                            ${issues.map(issue => `<li>${issue}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
 
-                if (Object.keys(permissions).length > 0) {
-                    html += `
-                        <div>
-                            <h3 class="font-semibold text-gray-700">Permissions:</h3>
-                            <ul class="list-disc list-inside text-gray-600">
-                                ${Object.entries(permissions).map(([key, value]) => 
-                                    `<li>${key}: ${value}</li>`
-                                ).join('')}
-                            </ul>
-                        </div>
-                    `;
-                }
-
-                html += '</div>';
+            if (Object.keys(permissions).length > 0) {
+                html += `
+                    <div class="block fade-in">
+                        <h3>Permissions</h3>
+                        <ul class="list">
+                            ${Object.entries(permissions).map(([key, value]) =>
+                                `<li>${key}: ${value}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
             }
 
             resultContent.innerHTML = html;
