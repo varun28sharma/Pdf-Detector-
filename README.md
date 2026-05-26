@@ -2,6 +2,7 @@
 
 A powerful tool for analyzing PDF files to detect modifications, verify integrity, and identify potential tampering. This tool performs comprehensive analysis including metadata inspection, digital signature verification, content integrity checks, and OCR-based analysis for scanned documents.
 
+
 ## Features
 
 - **Metadata Analysis**: Extracts and analyzes PDF metadata for inconsistencies
